@@ -3,14 +3,14 @@ let activeId = null;
 let isSplit = false;
 
 window.onload = () => {
-    const saved = localStorage.getItem('mint-os-v8');
+    const saved = localStorage.getItem('mint-os-v9');
     if (saved) {
         files = JSON.parse(saved);
     } else {
         files = [
-            { id: 'f1', name: 'index.html', type: 'html', content: '<h1>Welcome to Mint OS</h1>\n<p>Type a YouTube link above!</p>' },
+            { id: 'f1', name: 'index.html', type: 'html', content: '<h1>Mint OS v9</h1>\n<p>Try pasting a YouTube link!</p>' },
             { id: 'f2', name: 'style.css', type: 'css', content: 'body { background: #111; color: #fff; font-family: sans-serif; }' },
-            { id: 'f3', name: 'script.js', type: 'js', content: 'console.log("System Ready");' }
+            { id: 'f3', name: 'script.js', type: 'js', content: 'console.log("Mirror Protocol Active");' }
         ];
     }
     renderSidebar();
@@ -33,7 +33,7 @@ function switchFile(id) {
         editor.style.display = 'none';
         preview.style.display = 'block';
         preview.style.flex = '1';
-        omni.value = file.originalUrl || file.url || ''; // Show the "nice" URL, not the embed one
+        omni.value = file.originalUrl || file.url || ''; 
         loadBrowser(file);
     } else {
         editor.style.display = 'flex';
@@ -51,8 +51,8 @@ function handleNavigation() {
     const file = files.find(f => f.id === activeId);
     
     if (file.type === 'browser') {
-        file.originalUrl = val; // Save what the user typed
-        file.url = processUrl(val); // Convert to embed/proxy format
+        file.originalUrl = val;
+        file.url = processUrl(val); // Runs the new Mirror Engine
         file.name = "Browser"; 
         
         renderSidebar();
@@ -65,44 +65,43 @@ function handleNavigation() {
     }
 }
 
-// --- THE "SMART EMBED" ENGINE ---
-// This fixes the "Refused to Connect" error by using allowed Embed APIs
+// --- THE MIRROR ENGINE (v9.0) ---
 function processUrl(input) {
     let url = input.trim();
     
-    // 1. Handle Search Queries (if no dot is present)
+    // 1. Handle Search Queries
     if (!url.includes('.') || url.includes(' ')) {
         return `https://www.bing.com/search?q=${encodeURIComponent(url)}`;
     }
 
-    // 2. Ensure Protocol
-    if (!url.startsWith('http')) {
-        url = 'https://' + url;
-    }
+    if (!url.startsWith('http')) url = 'https://' + url;
 
-    // 3. YouTube Smart Embed
-    // Converts "youtube.com/watch?v=XYZ" -> "youtube.com/embed/XYZ"
-    if (url.includes('youtube.com/watch') || url.includes('youtu.be/')) {
+    // 2. YOUTUBE UNBLOCKER (Invidious Mirroring)
+    // Instead of youtube.com, we use 'yewtu.be' (Invidious).
+    // This domain is often Uncategorized/Unblocked by filters.
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
         let videoId = '';
         if (url.includes('v=')) {
             videoId = url.split('v=')[1].split('&')[0];
         } else if (url.includes('youtu.be/')) {
             videoId = url.split('youtu.be/')[1];
         }
+        
         if (videoId) {
-            return `https://www.youtube.com/embed/${videoId}`;
+            // Use 'yewtu.be' - A reliable public Invidious instance
+            return `https://yewtu.be/embed/${videoId}?autoplay=1`;
         }
     }
 
-    // 4. Twitch Smart Embed
-    if (url.includes('twitch.tv/')) {
-        const channel = url.split('twitch.tv/')[1];
-        return `https://player.twitch.tv/?channel=${channel}&parent=${location.hostname}`;
+    // 3. TIKTOK UNBLOCKER (ProxiTok)
+    if (url.includes('tiktok.com')) {
+        // Redirects to ProxiTok instance
+        return `https://proxitok.pabloferreiro.es/${url.split('tiktok.com')[1]}`;
     }
 
-    // 5. Wikipedia (Mobile version works better in iframes)
-    if (url.includes('wikipedia.org')) {
-        return url.replace('wikipedia.org', 'm.wikipedia.org');
+    // 4. REDDIT UNBLOCKER (Libreddit)
+    if (url.includes('reddit.com')) {
+        return url.replace('reddit.com', 'libreddit.kavin.rocks');
     }
 
     return url;
@@ -112,39 +111,40 @@ async function loadBrowser(file) {
     const frame = document.getElementById('web-frame');
     const stealth = document.getElementById('stealth-mode').checked;
     
-    // Clear previous state
     frame.removeAttribute('srcdoc');
     
+    // If we detected a video mirror (yewtu.be), FORCE standard mode.
+    // Stealth mode breaks video players.
+    if (file.url.includes('yewtu.be') || file.url.includes('proxitok')) {
+        frame.src = file.url;
+        document.getElementById('status').innerText = "Mirror Active (Unblocked)";
+        return;
+    }
+
     if (stealth) {
-        // Proxy Mode for basic text sites (Wikipedia, Docs, Articles)
-        document.getElementById('status').innerText = "Attempting Proxy Connection...";
+        // Proxy Mode for Text Sites (Wikipedia, Articles)
+        document.getElementById('status').innerText = "Connecting via Proxy...";
         try {
             const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(file.url);
             const response = await fetch(proxyUrl);
-            if (!response.ok) throw new Error('Network Blocked');
+            if (!response.ok) throw new Error('Blocked');
             
             let html = await response.text();
             const baseUrl = new URL(file.url).origin;
             html = html.replace('<head>', `<head><base href="${baseUrl}/">`);
             
             frame.srcdoc = html;
-            document.getElementById('status').innerText = "Proxy Loaded";
+            document.getElementById('status').innerText = "Stealth Mode: ON";
         } catch (e) {
-            frame.srcdoc = `
-                <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#111;color:#fff">
-                    <h2 style="color:#ff5f57">Connection Blocked</h2>
-                    <p>The network filter rejected this request.</p>
-                    <p style="color:#888;font-size:12px">Try turning Stealth Mode OFF for YouTube/Embeds.</p>
-                </div>`;
+            frame.srcdoc = `<div style="color:#fff;background:#000;height:100vh;display:flex;align-items:center;justify-content:center;"><h2>Proxy Failed</h2></div>`;
         }
     } else {
-        // Direct Mode (Use this for YouTube Embeds)
         frame.src = file.url;
         document.getElementById('status').innerText = "Direct Connection";
     }
 }
 
-// --- STANDARD SYSTEM FUNCTIONS ---
+// --- STANDARD FUNCTIONS ---
 
 function createBrowserTab() {
     const id = 'b' + Date.now();
@@ -160,15 +160,14 @@ function runProject() {
     
     const frame = document.getElementById('web-frame');
     const htmlFile = files.find(f => f.name.endsWith('.html')) || files.find(f => f.type !== 'browser');
-    
     if (!htmlFile) return;
 
     const cssFiles = files.filter(f => f.name.endsWith('.css'));
     const jsFiles = files.filter(f => f.name.endsWith('.js'));
 
     let finalHtml = htmlFile.content;
-    cssFiles.forEach(css => { finalHtml += `<style>/* ${css.name} */\n${css.content}</style>`; });
-    jsFiles.forEach(js => { finalHtml += `<script>/* ${js.name} */\ntry{ ${js.content} }catch(e){console.error(e)}<\/script>`; });
+    cssFiles.forEach(css => { finalHtml += `<style>\n${css.content}</style>`; });
+    jsFiles.forEach(js => { finalHtml += `<script>\ntry{ ${js.content} }catch(e){console.log(e)}<\/script>`; });
 
     frame.srcdoc = finalHtml;
 }
@@ -213,5 +212,5 @@ function updateStatus() {
     document.getElementById('mem-usage').innerText = (size/1024).toFixed(2) + ' KB';
 }
 
-function save() { localStorage.setItem('mint-os-v8', JSON.stringify(files)); updateStatus(); }
-function resetOS() { if(confirm("Reset everything?")) { localStorage.clear(); location.reload(); } }
+function save() { localStorage.setItem('mint-os-v9', JSON.stringify(files)); updateStatus(); }
+function resetOS() { if(confirm("Reset OS?")) { localStorage.clear(); location.reload(); } }
