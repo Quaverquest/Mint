@@ -1,398 +1,269 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Browser Emulator</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mint Browser</title>
+<style>
+  :root {
+    --bg-app: #0a1a14;
+    --bg-panel: #162a22;
+    --bg-input: #0d1f18;
+    --accent: #28c87a;
+    --text-main: #d8f5ea;
+    --text-dim: #5a8a72;
+    --border: #2e5042;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { 
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+    background: var(--bg-app); 
+    height: 100vh; 
+    display: flex; 
+    flex-direction: column; 
+    overflow: hidden; 
+    color: var(--text-main);
+  }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
+  /* Title bar */
+  .titlebar { 
+    background: #12241e; 
+    padding: 12px 14px 0; 
+    display: flex; 
+    flex-direction: column; 
+    border-bottom: 1px solid var(--border);
+  }
+  .traffic-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; transition: transform 0.1s; }
+  .dot:hover { transform: scale(1.1); }
+  .dot.red { background: #ff5f57; }
+  .dot.yellow { background: #ffbd2e; }
+  .dot.green { background: #28c840; }
+  .brand { margin-left: 12px; font-size: 12px; font-weight: 700; color: var(--accent); letter-spacing: 1px; opacity: 0.8; }
+  
+  /* Tabs */
+  .tabs-row { display: flex; align-items: flex-end; gap: 6px; }
+  .tab { 
+    background: var(--bg-panel); 
+    color: var(--text-dim); 
+    font-size: 12px; 
+    padding: 8px 16px; 
+    border-radius: 8px 8px 0 0; 
+    cursor: pointer; 
+    border: 1px solid transparent;
+    transition: all 0.2s;
+    min-width: 120px;
+  }
+  .tab.active { 
+    background: var(--bg-app); 
+    color: var(--text-main); 
+    border-color: var(--border); 
+    border-bottom-color: var(--bg-app); 
+    font-weight: 500;
+  }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
+  /* Toolbar */
+  .toolbar { 
+    background: var(--bg-panel); 
+    padding: 10px 16px; 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    border-bottom: 1px solid var(--border); 
+  }
+  .nav-btn { 
+    background: none; 
+    border: none; 
+    color: var(--accent); 
+    cursor: pointer; 
+    font-size: 16px; 
+    padding: 6px; 
+    border-radius: 6px; 
+    transition: background 0.15s; 
+  }
+  .nav-btn:hover { background: rgba(40, 200, 122, 0.1); }
+  
+  /* Address Bar Group */
+  .address-group {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px 8px;
+    transition: border-color 0.2s;
+  }
+  .address-group:focus-within { border-color: var(--accent); }
 
-        .header {
-            background: white;
-            border-radius: 12px;
-            padding: 15px 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
+  .engine-select {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-size: 12px;
+    font-weight: 600;
+    padding-right: 8px;
+    border-right: 1px solid var(--border);
+    margin-right: 8px;
+    cursor: pointer;
+    outline: none;
+  }
+  .engine-select:hover { color: var(--accent); }
+  .engine-select option { background: var(--bg-panel); color: var(--text-main); }
 
-        .url-bar {
-            flex: 1;
-            min-width: 200px;
-        }
+  .url-input { 
+    background: none; 
+    border: none; 
+    outline: none; 
+    color: var(--text-main); 
+    font-size: 13px; 
+    flex: 1; 
+    font-family: inherit; 
+  }
 
-        .url-input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: all 0.3s ease;
-            font-family: inherit;
-        }
+  /* Proxy Switch */
+  .proxy-switch {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-dim);
+    cursor: pointer;
+    user-select: none;
+  }
+  .proxy-checkbox { accent-color: var(--accent); }
 
-        .url-input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .url-input::placeholder {
-            color: #999;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 8px;
-        }
-
-        button {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: inherit;
-        }
-
-        .go-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            min-width: 70px;
-        }
-
-        .go-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .go-btn:active {
-            transform: translateY(0);
-        }
-
-        .clear-btn {
-            background: #f0f0f0;
-            color: #333;
-            min-width: 70px;
-        }
-
-        .clear-btn:hover {
-            background: #e0e0e0;
-        }
-
-        .browser-window {
-            flex: 1;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            min-height: 400px;
-        }
-
-        .browser-content {
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-        }
-
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: block;
-        }
-
-        .loading-spinner {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            pointer-events: none;
-        }
-
-        .loading-spinner.active {
-            opacity: 1;
-        }
-
-        .spinner {
-            border: 4px solid #f0f0f0;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .status-bar {
-            padding: 10px 20px;
-            background: #f9f9f9;
-            border-top: 1px solid #e0e0e0;
-            font-size: 12px;
-            color: #666;
-            font-family: 'Courier New', monospace;
-        }
-
-        .error-message {
-            color: #d32f2f;
-            padding: 15px 20px;
-            background: #ffebee;
-            border-radius: 8px;
-            display: none;
-            margin-top: 10px;
-            border-left: 4px solid #d32f2f;
-        }
-
-        .error-message.show {
-            display: block;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                height: auto;
-                min-height: 100vh;
-            }
-
-            .header {
-                flex-direction: column;
-            }
-
-            .url-bar {
-                min-width: 100%;
-            }
-
-            .button-group {
-                width: 100%;
-            }
-
-            button {
-                flex: 1;
-            }
-
-            .browser-window {
-                min-height: 500px;
-                flex: 1;
-            }
-        }
-
-        @media (max-width: 480px) {
-            body {
-                padding: 10px;
-            }
-
-            .header {
-                padding: 10px 15px;
-            }
-
-            .url-input {
-                padding: 10px 12px;
-                font-size: 16px;
-            }
-
-            button {
-                padding: 10px 16px;
-                font-size: 12px;
-            }
-
-            .browser-window {
-                min-height: 400px;
-            }
-        }
-    </style>
+  /* Content */
+  .content { flex: 1; position: relative; background: #fff; }
+  iframe { width: 100%; height: 100%; border: none; display: block; }
+  
+  /* New Tab Page */
+  .newtab-container { 
+    position: absolute; top:0; left:0; width:100%; height:100%; 
+    display: flex; flex-direction: column; 
+    align-items: center; justify-content: center; 
+    background: var(--bg-app); 
+    gap: 24px;
+    z-index: 10;
+  }
+  .mint-logo-big { font-size: 56px; font-weight: 800; color: var(--accent); letter-spacing: -2px; }
+  .mint-logo-big span { color: var(--text-dim); }
+  
+  .nt-search { 
+    display: flex; 
+    align-items: center; 
+    background: var(--bg-panel); 
+    border: 1px solid var(--border); 
+    border-radius: 100px; 
+    padding: 16px 28px; 
+    width: 100%; 
+    max-width: 520px; 
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    transition: transform 0.2s;
+  }
+  .nt-search:focus-within { transform: scale(1.02); border-color: var(--accent); }
+  .nt-search input { 
+    background: none; border: none; outline: none; 
+    color: var(--text-main); font-size: 16px; flex: 1; 
+  }
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="url-bar">
-                <input 
-                    type="text" 
-                    class="url-input" 
-                    id="urlInput" 
-                    placeholder="Enter a website URL (e.g., https://example.com)"
-                    autocomplete="off"
-                >
-            </div>
-            <div class="button-group">
-                <button class="go-btn" id="goBtn">Go</button>
-                <button class="clear-btn" id="clearBtn">Clear</button>
-            </div>
-        </div>
 
-        <div class="error-message" id="errorMessage"></div>
+<div class="titlebar">
+  <div class="traffic-row">
+    <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+    <span class="brand">MINT</span>
+  </div>
+  <div class="tabs-row">
+    <div class="tab active" onclick="resetToHome()">New Tab</div>
+    <div class="tab" style="opacity:0.5">Drafts</div>
+  </div>
+</div>
 
-        <div class="browser-window">
-            <div class="browser-content">
-                <div class="loading-spinner" id="loadingSpinner">
-                    <div class="spinner"></div>
-                </div>
-                <iframe id="browserFrame" title="Web Browser Emulator Content"></iframe>
-            </div>
-            <div class="status-bar" id="statusBar">Ready</div>
-        </div>
+<div class="toolbar">
+  <button class="nav-btn" onclick="resetToHome()">⌂</button>
+  <button class="nav-btn" onclick="refreshIframe()">↻</button>
+  
+  <div class="address-group">
+    <select id="engine-select" class="engine-select">
+      <option value="google">G</option>
+      <option value="bing">B</option>
+      <option value="ddg">D</option>
+    </select>
+    <input class="url-input" id="url-bar" type="text" placeholder="Search or enter URL..." onkeydown="if(event.key==='Enter')handleNavigation()" />
+  </div>
+
+  <label class="proxy-switch" title="Attempt to unblock sites (Experimental)">
+    <input type="checkbox" id="proxy-toggle" class="proxy-checkbox">
+    <span>Proxy Mode</span>
+  </label>
+</div>
+
+<div class="content" id="content-area">
+  <div id="newtab-view" class="newtab-container">
+    <div class="mint-logo-big">mint<span>.</span></div>
+    <div class="nt-search">
+      <input type="text" id="nt-input" placeholder="Search the web..." onkeydown="if(event.key==='Enter')handleNavigation(this.value)">
     </div>
+  </div>
+  <iframe id="web-frame" src="" style="display:none;"></iframe>
+</div>
 
-    <script>
-        const urlInput = document.getElementById('urlInput');
-        const goBtn = document.getElementById('goBtn');
-        const clearBtn = document.getElementById('clearBtn');
-        const browserFrame = document.getElementById('browserFrame');
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const statusBar = document.getElementById('statusBar');
-        const errorMessage = document.getElementById('errorMessage');
+<script>
+const webFrame = document.getElementById('web-frame');
+const newTabView = document.getElementById('newtab-view');
+const urlBar = document.getElementById('url-bar');
+const engineSelect = document.getElementById('engine-select');
+const proxyToggle = document.getElementById('proxy-toggle');
 
-        // Format URL properly
-        function formatURL(url) {
-            url = url.trim();
-            
-            if (!url) {
-                return '';
-            }
+function handleNavigation(customValue) {
+    let input = customValue || urlBar.value || document.getElementById('nt-input').value;
+    if (!input) return;
+    input = input.trim();
 
-            // If URL doesn't start with a protocol, add https://
-            if (!url.match(/^https?:\/\//i)) {
-                // Check if it looks like localhost or IP address
-                if (url.startsWith('localhost') || url.match(/^(\d{1,3}\.){3}\d{1,3}/)) {
-                    url = 'http://' + url;
-                } else {
-                    url = 'https://' + url;
-                }
-            }
+    let targetUrl = '';
+    const isUrl = input.includes('.') && !input.includes(' ');
 
-            return url;
-        }
+    if (isUrl) {
+        targetUrl = input.startsWith('http') ? input : 'https://' + input;
+    } else {
+        const engine = engineSelect.value;
+        const query = encodeURIComponent(input);
+        if (engine === 'google') targetUrl = `https://google.com{query}&igu=1`;
+        else if (engine === 'bing') targetUrl = `https://bing.com{query}`;
+        else if (engine === 'ddg') targetUrl = `https://duckduckgo.com{query}`;
+    }
 
-        // Validate URL
-        function isValidURL(url) {
-            try {
-                new URL(url);
-                return true;
-            } catch (e) {
-                return false;
-            }
-        }
+    // Proxy Logic
+    if (proxyToggle.checked) {
+        // Using corsproxy.io as a public gateway example
+        targetUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
+    }
 
-        // Load website
-        function loadWebsite() {
-            const url = urlInput.value.trim();
+    loadPage(targetUrl);
+    urlBar.value = targetUrl; // Show actual URL being loaded
+}
 
-            if (!url) {
-                showError('Please enter a URL');
-                return;
-            }
+function loadPage(url) {
+    newTabView.style.display = 'none';
+    webFrame.style.display = 'block';
+    webFrame.src = url;
+}
 
-            const formattedURL = formatURL(url);
+function resetToHome() {
+    newTabView.style.display = 'flex';
+    webFrame.style.display = 'none';
+    webFrame.src = '';
+    urlBar.value = '';
+    document.getElementById('nt-input').value = '';
+    document.getElementById('nt-input').focus();
+}
 
-            if (!isValidURL(formattedURL)) {
-                showError('Please enter a valid URL');
-                return;
-            }
+function refreshIframe() {
+    if (webFrame.src) webFrame.contentWindow.location.reload();
+}
+</script>
 
-            clearError();
-            showLoading(true);
-            statusBar.textContent = `Loading: ${formattedURL}`;
-
-            // Update the input with formatted URL
-            urlInput.value = formattedURL;
-
-            // Load the URL
-            browserFrame.src = formattedURL;
-
-            // Handle iframe load
-            browserFrame.onload = function() {
-                showLoading(false);
-                statusBar.textContent = `Loaded: ${formattedURL}`;
-            };
-
-            // Handle iframe error
-            browserFrame.onerror = function() {
-                showLoading(false);
-                showError(`Unable to load: ${formattedURL}. The website may not allow embedding or may be offline.`);
-                statusBar.textContent = `Error loading: ${formattedURL}`;
-            };
-
-            // Set a timeout for loading
-            setTimeout(() => {
-                if (loadingSpinner.classList.contains('active')) {
-                    showLoading(false);
-                }
-            }, 10000);
-        }
-
-        // Show/hide loading spinner
-        function showLoading(show) {
-            if (show) {
-                loadingSpinner.classList.add('active');
-            } else {
-                loadingSpinner.classList.remove('active');
-            }
-        }
-
-        // Show error message
-        function showError(message) {
-            errorMessage.textContent = message;
-            errorMessage.classList.add('show');
-        }
-
-        // Clear error message
-        function clearError() {
-            errorMessage.classList.remove('show');
-            errorMessage.textContent = '';
-        }
-
-        // Clear all
-        function clearAll() {
-            urlInput.value = '';
-            browserFrame.src = '';
-            statusBar.textContent = 'Ready';
-            clearError();
-            showLoading(false);
-            urlInput.focus();
-        }
-
-        // Event listeners
-        goBtn.addEventListener('click', loadWebsite);
-        clearBtn.addEventListener('click', clearAll);
-
-        urlInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                loadWebsite();
-            }
-        });
-
-        // Focus on input on page load
-        urlInput.focus();
-    </script>
 </body>
 </html>
