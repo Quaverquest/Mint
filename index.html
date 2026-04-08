@@ -3,28 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mint OS v8 - Modular</title>
+    <title>Mint OS v9</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div class="sidebar">
         <div class="brand">
-            <span>MINT OS v8</span>
+            <span>MINT OS v9</span>
             <span class="reset-btn" onclick="resetOS()">⟳</span>
         </div>
         <div class="file-list" id="file-list"></div>
         <div class="sidebar-controls">
             <button class="btn" onclick="showNewFile()">+ New File</button>
             <button class="btn" onclick="createBrowserTab()">+ New Browser</button>
-            <!-- Relay connect button -->
-            <button class="btn relay-btn" id="relay-badge" onclick="showRelayModal()">⚪ Relay</button>
+            <button class="btn btn-remote" onclick="createRemoteTab()">🖥 Remote Desktop</button>
         </div>
     </div>
 
     <div class="workspace">
         <div class="toolbar">
-            <button class="btn" onclick="toggleSplit()" id="btn-split">🌗</button>
+            <button class="btn" onclick="toggleSplit()">🌗</button>
             <div class="address-wrapper">
                 <input type="text" class="address-bar" id="omni-bar"
                     placeholder="Search Google or enter URL…"
@@ -47,78 +46,13 @@
                     <div class="blocked-box">
                         <div class="blocked-icon">🔒</div>
                         <h3>Site Blocked Embedding</h3>
-                        <p>This site refuses to load in a frame.<br>
-                           Connect your <strong>personal relay</strong> to load any site.</p>
-                        <button class="btn btn-primary" onclick="showRelayModal()">🔌 Connect Relay</button>
-                        <button class="btn" onclick="openCurrentInTab()">↗ Open in New Tab</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="status-bar">
-            <span id="status">Ready</span>
-            <span id="mem-usage">0kb</span>
-        </div>
-    </div>
-
-    <!-- New File Modal -->
-    <div class="modal-overlay" id="modal-new">
-        <div class="modal">
-            <h3>Create File</h3>
-            <div class="input-group">
-                <label>Filename (e.g., style.css)</label>
-                <input type="text" class="modal-input" id="new-filename" placeholder="index.html">
-            </div>
-            <button class="btn btn-primary" onclick="confirmNewFile()">Create</button>
-            <button class="btn" onclick="closeModal()">Cancel</button>
-        </div>
-    </div>
-
-    <!-- Relay Config Modal -->
-    <div class="modal-overlay" id="modal-relay">
-        <div class="modal">
-            <h3>🔌 Connect Personal Relay</h3>
-            <p class="modal-hint">Run <code>relay-server.js</code> on your home device,<br>then enter its address and your secret key below.</p>
-            <div class="input-group">
-                <label>Relay WebSocket URL</label>
-                <input type="text" class="modal-input" id="relay-url-input"
-                    placeholder="ws://YOUR_IP:8765">
-            </div>
-            <div class="input-group">
-                <label>Secret Key</label>
-                <input type="password" class="modal-input" id="relay-key-input"
-                    placeholder="your-secret-key">
-            </div>
-            <button class="btn btn-primary" onclick="confirmRelay()">Connect</button>
-            <button class="btn btn-danger"  onclick="disconnectRelay(); closeModal('modal-relay')">Disconnect</button>
-            <button class="btn"             onclick="closeModal('modal-relay')">Cancel</button>
-        </div>
-    </div>
-
-    <script src="script.js"></script>
-</body>
-</html>
-        <div class="view-stack">
-            <div class="editor-pane" id="pane-editor">
-                <textarea class="code-area" id="code-input" oninput="updateFile()" spellcheck="false"></textarea>
-            </div>
-            <div class="preview-pane" id="pane-preview" style="display:none">
-                <span class="pane-label">PREVIEW</span>
-                <iframe id="web-frame"></iframe>
-                <!-- Blocked-site overlay -->
-                <div class="blocked-overlay" id="blocked-overlay" style="display:none">
-                    <div class="blocked-box">
-                        <div class="blocked-icon">🔒</div>
-                        <h3>Site Blocked Embedding</h3>
-                        <p>This site refuses to load inside a frame.<br>Try <strong>Stealth Mode</strong> or open it directly.</p>
+                        <p>This site refuses to load in a frame.</p>
                         <button class="btn btn-primary" onclick="openCurrentInTab()">↗ Open in New Tab</button>
-                        <button class="btn" onclick="retryWithStealth()">🛡 Try Stealth Mode</button>
                     </div>
                 </div>
             </div>
         </div>
-        
+
         <div class="status-bar">
             <span id="status">Ready</span>
             <span id="mem-usage">0kb</span>
