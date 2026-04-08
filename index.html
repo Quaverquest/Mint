@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mint OS v8 - Modular</title>
-    <!-- Links to the separate CSS file -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -25,13 +24,14 @@
         <div class="toolbar">
             <button class="btn" onclick="toggleSplit()" id="btn-split">🌗</button>
             <div class="address-wrapper">
-                <input type="text" class="address-bar" id="omni-bar" placeholder="Search or Enter URL..." onkeydown="if(event.key==='Enter') handleNavigation()">
+                <input type="text" class="address-bar" id="omni-bar" placeholder="Search Google or Enter URL..." onkeydown="if(event.key==='Enter') handleNavigation()">
             </div>
             <label class="toggle" title="Turn ON to fix 'Refused to Connect'">
                 <input type="checkbox" id="stealth-mode">
                 <div class="slider"></div>
                 <span>Stealth Mode</span>
             </label>
+            <button class="btn toolbar-open-btn" id="btn-open-tab" onclick="openCurrentInTab()" title="Open in New Tab" style="display:none">↗</button>
             <button class="btn" onclick="runProject()">▶ Run</button>
         </div>
 
@@ -42,6 +42,16 @@
             <div class="preview-pane" id="pane-preview" style="display:none">
                 <span class="pane-label">PREVIEW</span>
                 <iframe id="web-frame"></iframe>
+                <!-- Blocked-site overlay -->
+                <div class="blocked-overlay" id="blocked-overlay" style="display:none">
+                    <div class="blocked-box">
+                        <div class="blocked-icon">🔒</div>
+                        <h3>Site Blocked Embedding</h3>
+                        <p>This site refuses to load inside a frame.<br>Try <strong>Stealth Mode</strong> or open it directly.</p>
+                        <button class="btn btn-primary" onclick="openCurrentInTab()">↗ Open in New Tab</button>
+                        <button class="btn" onclick="retryWithStealth()">🛡 Try Stealth Mode</button>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -64,7 +74,6 @@
         </div>
     </div>
 
-    <!-- Links to the separate JS file -->
     <script src="script.js"></script>
 </body>
 </html>
